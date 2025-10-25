@@ -10,3 +10,24 @@ resource "aws_vpc" "project-3tier-vpc" {
         name = "project-3tier-vpc"
     }
 }
+#Creates 1 public subnet for the "web tier" in 2 AZ's 
+resource "aws_subnet" "Public_Subnet_Web" {
+  vpc_id = aws_vpc.project-3tier-vpc.id
+  cidr_block = "10.0.1.0/24"
+  availability_zone = ["us-east-1a", " us-east-1b"]
+  map_public_ip_on_launch = true
+}
+#Creates 1 private subnet for the "app tier" in 2 AZ's 
+resource "aws_subnet" "Private_Subnet_App" {
+  vpc_id = aws_vpc.project-3tier-vpc.id
+  cidr_block = "10.0.2.0/24"
+  availability_zone = ["us-east-1a", " us-east-1b"]
+  map_public_ip_on_launch = false
+}
+#Creates 1 private subnet for the "app tier" in 2 AZ's 
+resource "aws_subnet" "Private_Subnet_DB" {
+  vpc_id = aws_vpc.project-3tier-vpc.id
+  cidr_block = "10.0.3.0/24"
+  availability_zone = ["us-east-1a", " us-east-1b"]
+  map_public_ip_on_launch = false 
+}
