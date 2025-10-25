@@ -16,6 +16,7 @@ resource "aws_subnet" "Public_Subnet_Web" {
   cidr_block = "10.0.1.0/24"
   availability_zone = ["us-east-1a", " us-east-1b"]
   map_public_ip_on_launch = true
+
   tags = {
     Name = "Public_Subnet_Web"
   }
@@ -26,6 +27,7 @@ resource "aws_subnet" "Private_Subnet_App" {
   cidr_block = "10.0.2.0/24"
   availability_zone = ["us-east-1a", " us-east-1b"]
   map_public_ip_on_launch = false
+
   tags = {
     Name = "Private_Subnet_App"
 
@@ -37,6 +39,7 @@ resource "aws_subnet" "Private_Subnet_DB" {
   cidr_block = "10.0.3.0/24"
   availability_zone = ["us-east-1a", " us-east-1b"]
   map_public_ip_on_launch = false 
+
   tags = {
     name = "Private_Subnet_DB"
   }
@@ -48,4 +51,22 @@ resource "aws_internet_gateway" "IGW" {
   tags = {
     Name = "IGW"
   }
+}
+#Creates a Elastic IP
+resource "aws_eip" "Elastic_IP" {
+    domain = aws_vpc.project-3tier-vpc
+
+    tags = {
+      Name = "Elastic_IP"
+    }
+  
+}
+#Creates NAT Gateway for private subnets to reach internet
+resource "aws_nat_gateway" "name" {
+    allocation_id = aws_eip.Elastic_IP.id
+    subnet_id = aws_subnet.Public_Subnet_Web.id
+
+    tags = {
+      Name = "NAT_Gateway"
+    }
 }
