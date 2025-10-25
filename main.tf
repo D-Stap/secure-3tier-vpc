@@ -209,4 +209,40 @@ resource "aws_security_group" "DB_Security_Group" {
 
   
 }
+#Creates 1 EC2 instance for the web tier
+resource "aws_instance" "Web" {
+    ami = "ami-0abcdef1234567890"
+    instance_type = "t2.micro"
+    vpc_security_group_ids = [aws_security_group.Web_Security_Group.id]
+    subnet_id = aws_subnet.Public_Subnet_Web.id
+    user_data = <<-EOF
+                #!/bin/bash
+                yum update -y
+                yum install apache2 -y
+                systemctl start apache2
+                systemctl enable apache2
+                echo "It Works! from $(hostname -f)" > /var/www/html/index.html
+                EOF
+    tags = {
+        Name = "Web"
+    }
   
+}
+#Creates 1 MySQL DB instance for the DB
+resource "aws_db_instance" "DB" {
+    allocated_storage = 10
+    db_name = "Private_DB"
+    engine = "MySQL"
+    engine_version = "8.0"
+    username = data.aws_secretsmanager_secret_version.db_creds.secret_string["username"]
+    password = data.aws_secretsmanager_secret_version.db_creds.secret_string["password"]
+    instance_class = "db.t2.micro"
+    parameter_group_name = "default.mysql8.0"
+    skip_final_snapshot = true
+
+    tags = {
+      name = "DB"
+    }
+
+
+}
