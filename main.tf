@@ -33,7 +33,7 @@ resource "aws_subnet" "Private_Subnet_App" {
 
   }
 }
-#Creates 1 private subnet for the "app tier" in 2 AZ's 
+#Creates 1 private subnet for the "DB tier" in 2 AZ's 
 resource "aws_subnet" "Private_Subnet_DB" {
   vpc_id = aws_vpc.project-3tier-vpc.id
   cidr_block = "10.0.3.0/24"
@@ -61,6 +61,48 @@ resource "aws_eip" "Elastic_IP" {
     }
   
 }
+#Creates  Public Route Table
+resource "aws_route_table" "Public_Subnet_Route_Table" {
+  vpc_id = aws_vpc.project-3tier-vpc.id
+
+  route = {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.IGW.id
+
+  }
+  tags = {
+    Name = "Public_Subnet_Route_Table"
+  }
+}
+#Associates Public RT with Public Subnet
+resource "aws_route_table_association" "Public_Web" {
+    subnet_id = aws_subnet.Public_Subnet_Web.id
+    route_table_id = aws_route_table.Public_Subnet_Route_Table
+}
+#Creates Private Route Table for NAT GATAWAY
+resource "aws_route_table" "Private_Subnet_Route_Table" {
+  vpc_id = aws_vpc.project-3tier-vpc.id
+
+  route = {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.name.id
+
+  }
+  tags = {
+    Name = "Private_Subnet_Route_Table"
+  }
+} 
+#Associates App Private RT with Private Subnets
+resource "aws_route_table_association" "Private_App" {
+    subnet_id = aws_subnet.Private_Subnet_App
+    route_table_id = aws_route_table.Private_Subnet_Route_Table
+}
+#Associates DB Private RT with Private Subnets
+resource "aws_route_table_association" "Private_DB" {
+    subnet_id = aws_subnet.Private_Subnet_DB
+    route_table_id = aws_route_table.Private_Subnet_Route_Table
+  
+}
 #Creates NAT Gateway for private subnets to reach internet
 resource "aws_nat_gateway" "name" {
     allocation_id = aws_eip.Elastic_IP.id
@@ -70,7 +112,7 @@ resource "aws_nat_gateway" "name" {
       Name = "NAT_Gateway"
     }
 }
-#Creates Security Groups for  each tier
+#Creates Web Security Group
 resource "aws_security_group" "Web_Security_Group" {
     name = "Web_Security_Group" 
     description = "Security Group for Web Tier"
@@ -103,6 +145,7 @@ resource "aws_security_group" "Web_Security_Group" {
 
   
 }
+#Creates App Security Group
 resource "aws_security_group" "App_Security_Group" {
     name = "App_Security_Group" 
     description = "Security Group for App Tier"
@@ -130,6 +173,7 @@ resource "aws_security_group" "App_Security_Group" {
 
   
 }
+#Creates DB Security Group
 resource "aws_security_group" "DB_Security_Group" {
     name = "DB_Security_Group" 
     description = "Security Group for DB Tier"
