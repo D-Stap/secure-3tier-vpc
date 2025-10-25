@@ -246,3 +246,38 @@ resource "aws_db_instance" "DB" {
 
 
 }
+#Create IAM Roles and Polices
+resource "aws_iam_role" "ReadOnlyCloudWatchLogsandS3" {
+    name = "ReadOnlyCloudWatchLogsandS3"
+    assume_role_policy = jsondecode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Action = "sts:AssumeRole"
+                Effect = "Allow"
+                Sid = ""
+                Principal = {
+                    Service = "s3.amazonaws.com/*"
+                    Service = "cloudwatch.amazonaws.com/*"
+                }
+            }
+        ]
+
+    })
+    tags = {
+        Name = "ReadOnlyCloudWatchLogsandS3"
+    }
+  
+}
+#Creats IAM Role policy 
+resource "aws_iam_role_policy_attachment" "s3_readonly" {
+    role = aws_iam_role.ReadOnlyCloudWatchLogsandS3.id
+    policy_arn = "arn:aws:iam::policy/AmazonS3ReadOnlyAccess"
+    policy_arn = "arn:aws:iam::policy/CloudWatchAgentServerPolicy"
+    
+    tags = {
+        Name = "s3_readonly"
+    }
+
+  
+}
