@@ -70,3 +70,99 @@ resource "aws_nat_gateway" "name" {
       Name = "NAT_Gateway"
     }
 }
+#Creates Security Groups for  each tier
+resource "aws_security_group" "Web_Security_Group" {
+    name = "Web_Security_Group" 
+    description = "Security Group for Web Tier"
+    vpc_id = aws_vpc.project-3tier-vpc.id
+
+    tags = {
+        Name = "Web_Security_Group"
+    }
+    ingress {
+        description = "HTTP"
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    ingress {
+        description = "HTTPS"
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    egress { 
+        from_port = 0
+        to_port = 0
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+
+  
+}
+resource "aws_security_group" "App_Security_Group" {
+    name = "App_Security_Group" 
+    description = "Security Group for App Tier"
+    vpc_id = aws_vpc.project-3tier-vpc.id
+
+    tags = {
+        Name = "App_Security_Group"
+    }
+    ingress {
+        description = "Web SG Inbound"
+        from_port = 8080
+        to_port = 8080
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.Web_Security_Group.id]
+    
+    }
+    egress { 
+        from_port = 5432
+        to_port = 5432
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.DB_Security_Group.id]
+    }
+
+  
+}
+resource "aws_security_group" "DB_Security_Group" {
+    name = "DB_Security_Group" 
+    description = "Security Group for DB Tier"
+    vpc_id = aws_vpc.project-3tier-vpc.id
+
+    tags = {
+        Name = "DB_Security_Group"
+    }
+    ingress {
+        description = "App SG Inbound"
+        from_port = 5432
+        to_port = 5432
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.App_Security_Group.id]
+    
+    }
+    ingress { 
+        description = "MySQL Inbound"
+        from_port = 3306
+        to_port = 3306
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.App_Security_Group.id]
+    }
+    egress { 
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+        ipv6_cidr_blocks = ["::/0"]
+    }
+
+  
+}
+  
